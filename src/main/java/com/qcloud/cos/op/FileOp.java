@@ -43,6 +43,7 @@ import com.qcloud.cos.meta.UploadSliceFileContext;
 import com.qcloud.cos.request.DelFileRequest;
 import com.qcloud.cos.request.GetFileInputStreamRequest;
 import com.qcloud.cos.request.GetFileLocalRequest;
+import com.qcloud.cos.request.MoveFileRequest;
 import com.qcloud.cos.request.StatFileRequest;
 import com.qcloud.cos.request.UpdateFileRequest;
 import com.qcloud.cos.request.UploadFileRequest;
@@ -77,7 +78,7 @@ public class FileOp extends BaseOp {
 
     /**
      * 更新文件属性请求
-     * 
+     *
      * @param request 更新文件属性请求
      * @return JSON格式的字符串, 格式为{"code":$code, "message":"$mess"}, code为0表示成功, 其他为失败,
      *         message为success或者失败原因
@@ -114,7 +115,7 @@ public class FileOp extends BaseOp {
 
     /**
      * 删除文件请求
-     * 
+     *
      * @param request 删除文件请求
      * @return JSON格式的字符串, 格式为{"code":$code, "message":"$mess"}, code为0表示成功, 其他为失败,
      *         message为success或者失败原因
@@ -126,7 +127,7 @@ public class FileOp extends BaseOp {
 
     /**
      * 获取文件属性请求
-     * 
+     *
      * @param request 获取文件属性请求
      * @return JSON格式的字符串, 格式为{"code":$code, "message":"$mess"}, code为0表示成功, 其他为失败,
      *         message为success或者失败原因
@@ -138,7 +139,7 @@ public class FileOp extends BaseOp {
 
     /**
      * 上传文件请求, 对小文件(8MB以下使用单文件上传接口）, 大文件使用分片上传接口
-     * 
+     *
      * @param request 上传文件请求
      * @return JSON格式的字符串, 格式为{"code":$code, "message":"$mess"}, code为0表示成功, 其他为失败,
      *         message为success或者失败原因
@@ -177,7 +178,7 @@ public class FileOp extends BaseOp {
 
     /**
      * 上传单文件请求, 不分片
-     * 
+     *
      * @param request 上传文件请求
      * @return JSON格式的字符串, 格式为{"code":$code, "message":"$mess"}, code为0表示成功, 其他为失败,
      *         message为success或者失败原因
@@ -241,7 +242,7 @@ public class FileOp extends BaseOp {
 
     /**
      * 分片上传文件
-     * 
+     *
      * @param request 分片上传请求
      * @return 服务器端返回的操作结果，成员code为0表示成功，具体参照文档手册
      * @throws Exception
@@ -251,6 +252,35 @@ public class FileOp extends BaseOp {
         UploadSliceFileContext context = new UploadSliceFileContext(request);
         context.setUrl(buildUrl(request));
         return uploadFileWithCheckPoint(context);
+    }
+
+    /**
+     * 移动文件请求(重命名)
+     *
+     * @param request
+     *            移动文件请求
+     * @return JSON格式的字符串, 格式为{"code":$code, "message":"$mess"}, code为0表示成功,
+     *         其他为失败, message为success或者失败原因
+     * @throws AbstractCosException
+     *             SDK定义的COS异常, 通常是输入参数有误或者环境问题(如网络不通)
+     */
+    public String moveFile(MoveFileRequest request) throws AbstractCosException {
+        request.check_param();
+
+        String url = buildUrl(request);
+        String sign = Sign.getOneEffectiveSign(request.getBucketName(), request.getCosPath(), this.cred);
+
+        HttpRequest httpRequest = new HttpRequest();
+        httpRequest.setUrl(url);
+        httpRequest.addHeader(RequestHeaderKey.Authorization, sign);
+        httpRequest.addHeader(RequestHeaderKey.Content_TYPE, RequestHeaderValue.ContentType.JSON);
+        httpRequest.addHeader(RequestHeaderKey.USER_AGENT, this.config.getUserAgent());
+        httpRequest.addParam(RequestBodyKey.OP, RequestBodyValue.OP.MOVE);
+        httpRequest.addParam(RequestBodyKey.DEST_FIELD, request.getDstCosPath());
+        httpRequest.addParam(RequestBodyKey.TO_OVER_WRITE, String.valueOf(request.getOverWrite().ordinal()));
+        httpRequest.setMethod(HttpMethod.POST);
+        httpRequest.setContentType(HttpContentType.APPLICATION_JSON);
+        return httpClient.sendHttpRequest(httpRequest);
     }
 
     // 断点续传
@@ -346,7 +376,7 @@ public class FileOp extends BaseOp {
 
     /**
      * 文件上传逻辑，包括发送init分片，数据分片，finish分片
-     * 
+     *
      * @param context
      * @param scp
      * @return
@@ -400,7 +430,7 @@ public class FileOp extends BaseOp {
 
     /**
      * 分片上传第一步，发送init分片
-     * 
+     *
      * @param context 分片上传请求上下文
      * @return 服务器端返回的操作结果，code为0表示成功，其他包括sessionId、offset等，具体参见文档手册
      * @throws Exception
@@ -470,7 +500,7 @@ public class FileOp extends BaseOp {
 
     /**
      * 分片上传第二步，发送数据分片
-     * 
+     *
      * @param context 分片上传请求
      * @return 服务器端返回的操作结果，code为0表示成功
      * @throws Exception
@@ -526,7 +556,7 @@ public class FileOp extends BaseOp {
 
     /**
      * 最后一步, 发送finish分片
-     * 
+     *
      * @return 服务器端返回的操作结果，成功code为0
      * @throws Exception
      */

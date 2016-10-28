@@ -15,6 +15,7 @@ import com.qcloud.cos.request.DelFileRequest;
 import com.qcloud.cos.request.DelFolderRequest;
 import com.qcloud.cos.request.GetFileLocalRequest;
 import com.qcloud.cos.request.ListFolderRequest;
+import com.qcloud.cos.request.MoveFileRequest;
 import com.qcloud.cos.request.StatFileRequest;
 import com.qcloud.cos.request.StatFolderRequest;
 import com.qcloud.cos.request.UpdateFileRequest;
@@ -102,6 +103,16 @@ public class Demo {
         // 6. 更新文件后再次获取属性
         statFileRet = cosClient.statFile(statFileRequest);
         System.out.println("stat file ret:" + statFileRet);
+        
+        // 6.1 move文件，从/sample_file.txt移动为./sample_file.txt.bak
+        String dstFilePath = cosFilePath + ".bak";
+        MoveFileRequest moveRequest = new MoveFileRequest(bucketName, cosFilePath, dstFilePath);
+        String moveFileRet = cosClient.moveFile(moveRequest);
+        System.out.println("first move file ret:" + moveFileRet);
+        // 6.2 在从/sample_file.txt.bak移动为/sample_file.txt
+        moveRequest = new MoveFileRequest(bucketName, dstFilePath, cosFilePath);
+        moveFileRet = cosClient.moveFile(moveRequest);
+        System.out.println("second move file ret:" + moveFileRet);
 
         // 7. 删除文件
         DelFileRequest delFileRequest = new DelFileRequest(bucketName, cosFilePath);

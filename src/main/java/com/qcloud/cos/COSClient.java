@@ -24,6 +24,7 @@ import com.qcloud.cos.request.DelFolderRequest;
 import com.qcloud.cos.request.GetFileInputStreamRequest;
 import com.qcloud.cos.request.GetFileLocalRequest;
 import com.qcloud.cos.request.ListFolderRequest;
+import com.qcloud.cos.request.MoveFileRequest;
 import com.qcloud.cos.request.StatFileRequest;
 import com.qcloud.cos.request.StatFolderRequest;
 
@@ -117,6 +118,20 @@ public class COSClient implements COS {
             recordException("deleteFolder", request, e1.toString());
             return e1.toString();
         }
+    }
+    
+    @Override                                                                                       
+    public String moveFile(MoveFileRequest request) {                                               
+        try {                                                                                       
+            return fileOp.moveFile(request);                                                        
+        } catch (AbstractCosException e) {                                                          
+            recordException("moveFile", request, e.toString());                                     
+            return e.toString();                                                                    
+        } catch (Exception e) {                                                                     
+            UnknownException e1 = new UnknownException(e.toString());                               
+            recordException("moveFile", request, e1.toString());                                    
+            return e1.toString();                                                                   
+        }                                                                                           
     }
 
     @Override

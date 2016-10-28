@@ -8,6 +8,7 @@ import com.qcloud.cos.request.DelFolderRequest;
 import com.qcloud.cos.request.GetFileInputStreamRequest;
 import com.qcloud.cos.request.GetFileLocalRequest;
 import com.qcloud.cos.request.ListFolderRequest;
+import com.qcloud.cos.request.MoveFileRequest;
 import com.qcloud.cos.request.StatFileRequest;
 import com.qcloud.cos.request.StatFolderRequest;
 import com.qcloud.cos.request.UpdateFileRequest;
@@ -71,6 +72,16 @@ public interface COS {
 	 *         其他为失败, message为success或者失败原因
      */
     String updateFile(UpdateFileRequest request);
+    
+    /**                                                                                             
+     * 移动文件                                                                                     
+     *                                                                                              
+     * @param request                                                                               
+     *            移动文件请求                                                                      
+     * @return JSON格式的字符串, 格式为{"code":$code, "message":"$mess"}, code为0表示成功,          
+     *         其他为失败, message为success或者失败原因                                             
+     */                                                                                             
+    String moveFile(MoveFileRequest request);
     
 	/**
 	 * 删除文件
