@@ -39,6 +39,10 @@ public class ClientConfig {
     private int maxConnectionsCount = DEFAULT_MAX_CONNECTIONS_COUNT;
     private String userAgent = DEFAULT_USER_AGENT;
 
+    // http proxy代理，如果使用http proxy代理，需要设置IP与端口
+    private String httpProxyIp = null;
+    private int httpProxyPort = 0;
+
 
     public int getMaxFailedRetry() {
         return maxFailedRetry;
@@ -139,5 +143,21 @@ public class ClientConfig {
     public void setRegion(String region) {
         this.uploadCosEndPointDomain = region + ".file.myqcloud.com";
         this.downCosEndPointDomain = "cos" + region + ".myqcloud.com";
+    }
+
+    public String getHttpProxyIp() {
+        return httpProxyIp;
+    }
+
+    public void setHttpProxyIp(String httpProxyIp) {
+        this.httpProxyIp = httpProxyIp;
+    }
+
+    public int getHttpProxyPort() {
+        return httpProxyPort;
+    }
+
+    public void setHttpProxyPort(int httpProxyPort) {
+        this.httpProxyPort = httpProxyPort;
     }
 }

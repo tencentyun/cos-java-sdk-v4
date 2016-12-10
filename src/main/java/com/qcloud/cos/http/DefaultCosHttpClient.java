@@ -192,6 +192,7 @@ public class DefaultCosHttpClient extends AbstractCosHttpClient {
                 throw new ParamException(errMsg);
             }
 
+            httpGet.setConfig(requestConfig);
             setHeaders(httpGet, httpRequest.getHeaders());
             try {
                 HttpResponse httpResponse = httpClient.execute(httpGet);
