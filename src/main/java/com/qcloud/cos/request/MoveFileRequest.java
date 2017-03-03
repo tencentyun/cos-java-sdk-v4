@@ -37,8 +37,4 @@ public class MoveFileRequest extends AbstractBaseRequest {
         CommonParamCheckUtils.AssertNotNull("overWrite", this.overWrite);
     }
     
-    @Override
-    public String toString() {
-    	return super.toString();
-    }
 }

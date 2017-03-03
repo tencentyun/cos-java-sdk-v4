@@ -19,8 +19,4 @@ public class DelFileRequest extends AbstractDelRequest {
     	CommonParamCheckUtils.AssertLegalCosFilePath(this.getCosPath());
     }
     
-    @Override
-    public String toString() {
-    	return super.toString();
-    }
 }

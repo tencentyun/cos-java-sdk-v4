@@ -16,6 +16,7 @@ public class RequestBodyKey {
 	public static final String NUM = "num";
 	public static final String CONTEXT = "context";
 	public static final String LIST_FLAG = "list_flag";
+    public static final String DELIMITER = "delimiter";
 	public static final String SHA = "sha";
 	public static final String FILE_CONTENT = "fileContent";
 	public static final String FILE_SIZE = "filesize";

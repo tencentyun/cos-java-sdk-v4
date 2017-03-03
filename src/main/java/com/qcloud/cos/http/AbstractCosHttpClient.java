@@ -40,6 +40,7 @@ public abstract class AbstractCosHttpClient {
                 .setConnectTimeout(this.config.getConnectionTimeout())
                 .setSocketTimeout(this.config.getSocketTimeout()).build();
         this.idleConnectionMonitor = new IdleConnectionMonitorThread(this.connectionManager);
+        this.idleConnectionMonitor.setDaemon(true);
         this.idleConnectionMonitor.start();
     }
 

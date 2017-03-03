@@ -39,9 +39,6 @@ public class UploadSliceFileRequest extends UploadFileRequest {
     public void check_param() throws ParamException {
         super.check_param();
         CommonParamCheckUtils.AssertLegalSliceSize(this.sliceSize);
-        if (this.isUploadFromBuffer() && this.enableSavePoint) {
-            throw new ParamException("uploadFromBuffer not support save point");
-        }
     }
 
     @Override
@@ -52,12 +49,6 @@ public class UploadSliceFileRequest extends UploadFileRequest {
         sb.append(", taskNum:").append(String.valueOf(this.taskNum));
         sb.append(", enableShaDigest:");
         if (enableShaDigest) {
-            sb.append("1");
-        } else {
-            sb.append("0");
-        }
-        sb.append(", enableSavePoint:");
-        if (enableSavePoint) {
             sb.append("1");
         } else {
             sb.append("0");

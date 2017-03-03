@@ -15,6 +15,7 @@ public class RequestBodyValue {
         public static final String UPLOAD_SLICE_INIT = "upload_slice_init";
         public static final String UPLOAD_SLICE_DATA = "upload_slice_data";
         public static final String UPLOAD_SLICE_FINISH = "upload_slice_finish";
+        public static final String UPLOAD_SLICE_LIST = "upload_slice_list";
     }
 
 }

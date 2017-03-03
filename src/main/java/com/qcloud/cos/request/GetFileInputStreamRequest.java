@@ -61,8 +61,4 @@ public class GetFileInputStreamRequest extends AbstractBaseRequest {
         this.referer = referer;
     }
 
-    @Override
-    public String toString() {
-        return super.toString();
-    }
 }

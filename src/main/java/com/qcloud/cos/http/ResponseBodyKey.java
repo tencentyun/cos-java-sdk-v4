@@ -13,6 +13,7 @@ public class ResponseBodyKey {
         public static final String SESSION = "session";
         public static final String OFFSET = "offset";
         public static final String SLICE_SIZE = "slice_size";
+        public static final String LISTPARTS = "listparts";
         public static final String SERIAL_UPLOAD = "serial_upload";
         public static final String ACCESS_URL = "access_url";
         public static final String URL = "url";

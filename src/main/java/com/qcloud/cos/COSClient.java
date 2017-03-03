@@ -277,5 +277,5 @@ public class COSClient implements COS {
     public void shutdown() {
         this.client.shutdown();
     }
-
+	
 }

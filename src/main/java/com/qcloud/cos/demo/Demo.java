@@ -56,7 +56,6 @@ public class Demo {
         String localFilePath1 = "src/test/resources/bigfile.txt";
         UploadFileRequest uploadFileRequest =
                 new UploadFileRequest(bucketName, cosFilePath, localFilePath1);
-        uploadFileRequest.setEnableSavePoint(false);
         uploadFileRequest.setEnableShaDigest(false);
         String uploadFileRet = cosClient.uploadFile(uploadFileRequest);
         System.out.println("upload file ret:" + uploadFileRet);

@@ -19,8 +19,4 @@ public class StatFolderRequest extends AbstractStatRequest {
     	CommonParamCheckUtils.AssertLegalCosFolderPath(this.getCosPath());
     }
 
-    @Override
-    public String toString() {
-    	return super.toString();
-    }
 }

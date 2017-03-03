@@ -142,6 +142,7 @@ public class FolderOp extends BaseOp {
 		httpRequest.addParam(RequestBodyKey.NUM, String.valueOf(request.getNum()));
 		httpRequest.addParam(RequestBodyKey.LIST_FLAG, String.valueOf(request.getListFlag()));
 		httpRequest.addParam(RequestBodyKey.CONTEXT, request.getContext());
+		httpRequest.addParam(RequestBodyKey.DELIMITER, request.getDelimiter());  
 		httpRequest.setMethod(HttpMethod.GET);
 
 		return httpClient.sendHttpRequest(httpRequest);

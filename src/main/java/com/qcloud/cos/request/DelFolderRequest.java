@@ -20,8 +20,4 @@ public class DelFolderRequest extends AbstractDelRequest {
     	CommonParamCheckUtils.AssertNotRootCosPath(this.getCosPath());
     }
     
-    @Override
-    public String toString() {
-    	return super.toString();
-    }
 }

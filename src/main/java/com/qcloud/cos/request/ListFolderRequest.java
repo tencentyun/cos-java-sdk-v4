@@ -16,6 +16,7 @@ public class ListFolderRequest extends AbstractBaseRequest {
     private int listFlag = DEFAULT_LIST_FLAG;
     private String context = "";
     private String prefix = "";
+    private String delimiter = "/";
 
     public ListFolderRequest(String bucketName, String cosPath) {
         super(bucketName, cosPath);
@@ -52,7 +53,14 @@ public class ListFolderRequest extends AbstractBaseRequest {
     public void setListFlag(int listFlag) {
         this.listFlag = listFlag;
     }
+    
+    public String getDelimiter() {
+        return delimiter;
+    }
 
+    public void setDelimiter(String delimiter) {
+        this.delimiter = delimiter;
+    }
 
     @Override
     public void check_param() throws ParamException {

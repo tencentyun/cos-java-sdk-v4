@@ -29,20 +29,17 @@ public class SliceFileDataTask implements Callable<JSONObject> {
 
     private int TaskId;
     private int sliceIndex;
-    private SliceCheckPoint scp;
     private UploadSliceFileContext context;
     private AbstractCosHttpClient httpClient;
     private Credentials cred;
     private String url;
     private long signExpired;
 
-    public SliceFileDataTask(int taskId, int sliceIndex, SliceCheckPoint scp,
-            UploadSliceFileContext context, AbstractCosHttpClient httpClient, Credentials cred,
-            String url, long signExpired) {
+    public SliceFileDataTask(int taskId, int sliceIndex, UploadSliceFileContext context,
+            AbstractCosHttpClient httpClient, Credentials cred, String url, long signExpired) {
         super();
         TaskId = taskId;
         this.sliceIndex = sliceIndex;
-        this.scp = scp;
         this.context = context;
         this.httpClient = httpClient;
         this.cred = cred;
@@ -52,16 +49,15 @@ public class SliceFileDataTask implements Callable<JSONObject> {
 
     @Override
     public JSONObject call() throws Exception {
-        JSONObject resultJson = null;
         try {
             HttpRequest httpRequest = new HttpRequest();
-            SlicePart slicePart = scp.sliceParts.get(sliceIndex);
+            SlicePart slicePart = context.sliceParts.get(sliceIndex);
             httpRequest.addParam(RequestBodyKey.OP, RequestBodyValue.OP.UPLOAD_SLICE_DATA);
             if (this.context.isEnableShaDigest()) {
                 httpRequest.addParam(RequestBodyKey.SHA, context.getEntireFileSha());
             }
 
-            httpRequest.addParam(RequestBodyKey.SESSION, scp.sessionId);
+            httpRequest.addParam(RequestBodyKey.SESSION, context.getSessionId());
             httpRequest.addParam(RequestBodyKey.OFFSET, String.valueOf(slicePart.getOffset()));
             String sliceContent = "";
             if (this.context.isUploadFromBuffer()) {
@@ -69,8 +65,8 @@ public class SliceFileDataTask implements Callable<JSONObject> {
                         new Long(slicePart.getOffset()).intValue(), slicePart.getSliceSize(),
                         Charset.forName("ISO-8859-1"));
             } else {
-                sliceContent = CommonFileUtils.getFileContent(scp.uploadFile, slicePart.getOffset(),
-                        slicePart.getSliceSize());
+                sliceContent = CommonFileUtils.getFileContent(context.getLocalPath(),
+                        slicePart.getOffset(), slicePart.getSliceSize());
             }
             httpRequest.addParam(RequestBodyKey.FILE_CONTENT, sliceContent);
 
@@ -84,15 +80,8 @@ public class SliceFileDataTask implements Callable<JSONObject> {
             httpRequest.setContentType(HttpContentType.MULTIPART_FORM_DATA);
 
             String resultStr = httpClient.sendHttpRequest(httpRequest);
-            resultJson = new JSONObject(resultStr);
-            if (resultJson.getInt(ResponseBodyKey.CODE) == 0) {
-                scp.update(sliceIndex, true);
-                if (context.isEnableSavePoint()) {
-                    scp.dump(context.getSavePointFile());
-                }
-            }
-
             LOG.debug("sliceFileDataTask: " + this.toString() + ", result: " + resultStr);
+            JSONObject resultJson = new JSONObject(resultStr);
             return resultJson;
         } catch (Exception e) {
             String errMsg = new StringBuilder().append("taskInfo:").append(this.toString())

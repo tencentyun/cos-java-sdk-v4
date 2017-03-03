@@ -16,6 +16,7 @@ import java.util.concurrent.Executors;
 import java.util.concurrent.Future;
 import java.util.concurrent.TimeUnit;
 
+import org.json.JSONArray;
 import org.json.JSONObject;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -23,6 +24,7 @@ import org.slf4j.LoggerFactory;
 import com.qcloud.cos.ClientConfig;
 import com.qcloud.cos.common_utils.CommonCodecUtils;
 import com.qcloud.cos.common_utils.CommonFileUtils;
+import com.qcloud.cos.common_utils.CommonPathUtils;
 import com.qcloud.cos.exception.AbstractCosException;
 import com.qcloud.cos.exception.ParamException;
 import com.qcloud.cos.exception.UnknownException;
@@ -35,15 +37,13 @@ import com.qcloud.cos.http.RequestBodyValue;
 import com.qcloud.cos.http.RequestHeaderKey;
 import com.qcloud.cos.http.RequestHeaderValue;
 import com.qcloud.cos.http.ResponseBodyKey;
-import com.qcloud.cos.meta.FileStat;
 import com.qcloud.cos.meta.InsertOnly;
-import com.qcloud.cos.meta.SliceCheckPoint;
 import com.qcloud.cos.meta.SliceFileDataTask;
-import com.qcloud.cos.meta.SlicePart;
 import com.qcloud.cos.meta.UploadSliceFileContext;
 import com.qcloud.cos.request.DelFileRequest;
 import com.qcloud.cos.request.GetFileInputStreamRequest;
 import com.qcloud.cos.request.GetFileLocalRequest;
+import com.qcloud.cos.request.ListPartsRequest;
 import com.qcloud.cos.request.MoveFileRequest;
 import com.qcloud.cos.request.StatFileRequest;
 import com.qcloud.cos.request.UpdateFileRequest;
@@ -63,7 +63,7 @@ public class FileOp extends BaseOp {
         super(config, cred, client);
     }
 
-    private String buildGetFileUrl(GetFileInputStreamRequest request) {
+    private String buildGetFileUrl(GetFileInputStreamRequest request) throws AbstractCosException {
         StringBuilder strBuilder = new StringBuilder();
         strBuilder.append(this.config.getDownCosEndPointPrefix()).append(request.getBucketName())
                 .append("-").append(this.cred.getAppId()).append(".");
@@ -72,7 +72,7 @@ public class FileOp extends BaseOp {
         } else {
             strBuilder.append(this.config.getDownCosEndPointDomain());
         }
-        strBuilder.append(request.getCosPath()).toString();
+        strBuilder.append(CommonPathUtils.encodeRemotePath(request.getCosPath()));
         String url = strBuilder.toString();
         return url;
     }
@@ -170,7 +170,6 @@ public class FileOp extends BaseOp {
             if (request.isUploadFromBuffer()) {
                 sliceRequest.setContentBufer(request.getContentBufer());
             }
-            sliceRequest.setEnableSavePoint(request.isEnableSavePoint());
             sliceRequest.setEnableShaDigest(request.isEnableShaDigest());
             sliceRequest.setTaskNum(request.getTaskNum());
             return uploadSliceFile(sliceRequest);
@@ -240,22 +239,23 @@ public class FileOp extends BaseOp {
 
         String retStr = httpClient.sendHttpRequest(httpRequest);
         if (request.getInsertOnly() != InsertOnly.OVER_WRITE) {
-        	return retStr;
+            return retStr;
         }
         // 对于Overwrite类型，覆盖上传失败，做特殊处理，删掉重新传
         JSONObject retJson = new JSONObject(retStr);
         if (retJson.getInt("code") == 0) {
-        	return retStr;
+            return retStr;
         }
-		// 1. Delete
-		DelFileRequest del_request = new DelFileRequest(request.getBucketName(), request.getCosPath());
-		String delRet = delFile(del_request);
-		JSONObject delJson = new JSONObject(delRet);
-		if (delJson.getInt("code") != 0) {
-			return retStr;
-		}
-		// 2. Upload Again
-		return httpClient.sendHttpRequest(httpRequest);
+        // 1. Delete
+        DelFileRequest del_request =
+                new DelFileRequest(request.getBucketName(), request.getCosPath());
+        String delRet = delFile(del_request);
+        JSONObject delJson = new JSONObject(delRet);
+        if (delJson.getInt("code") != 0) {
+            return retStr;
+        }
+        // 2. Upload Again
+        return httpClient.sendHttpRequest(httpRequest);
     }
 
     /**
@@ -270,28 +270,29 @@ public class FileOp extends BaseOp {
         UploadSliceFileContext context = new UploadSliceFileContext(request);
         context.setUrl(buildUrl(request));
         String retStr = uploadFileWithCheckPoint(context);
-        
+
         if (request.getInsertOnly() != InsertOnly.OVER_WRITE) {
-        	return retStr;
+            return retStr;
         }
         // 对于Overwrite类型，覆盖上传失败，做特殊处理，删掉重新传
         JSONObject retJson = new JSONObject(retStr);
         if (retJson.getInt("code") == 0) {
-        	return retStr;
+            return retStr;
         }
-		// 1. Delete
-		DelFileRequest del_request = new DelFileRequest(request.getBucketName(), request.getCosPath());
-		String delRet = delFile(del_request);
-		JSONObject delJson = new JSONObject(delRet);
-		if (delJson.getInt("code") != 0) {
-			return retStr;
-		}
-		// 2. Upload Again
+        // 1. Delete
+        DelFileRequest del_request =
+                new DelFileRequest(request.getBucketName(), request.getCosPath());
+        String delRet = delFile(del_request);
+        JSONObject delJson = new JSONObject(delRet);
+        if (delJson.getInt("code") != 0) {
+            return retStr;
+        }
+        // 2. Upload Again
         retStr = uploadFileWithCheckPoint(context);
         retJson = new JSONObject(retStr);
         if (retJson.getInt("code") != 0) {
-        	del_request = new DelFileRequest(request.getBucketName(), request.getCosPath());
-        	delFile(del_request);
+            del_request = new DelFileRequest(request.getBucketName(), request.getCosPath());
+            delFile(del_request);
         }
         return retStr;
     }
@@ -299,18 +300,17 @@ public class FileOp extends BaseOp {
     /**
      * 移动文件请求(重命名)
      *
-     * @param request
-     *            移动文件请求
-     * @return JSON格式的字符串, 格式为{"code":$code, "message":"$mess"}, code为0表示成功,
-     *         其他为失败, message为success或者失败原因
-     * @throws AbstractCosException
-     *             SDK定义的COS异常, 通常是输入参数有误或者环境问题(如网络不通)
+     * @param request 移动文件请求
+     * @return JSON格式的字符串, 格式为{"code":$code, "message":"$mess"}, code为0表示成功, 其他为失败,
+     *         message为success或者失败原因
+     * @throws AbstractCosException SDK定义的COS异常, 通常是输入参数有误或者环境问题(如网络不通)
      */
     public String moveFile(MoveFileRequest request) throws AbstractCosException {
         request.check_param();
 
         String url = buildUrl(request);
-        String sign = Sign.getOneEffectiveSign(request.getBucketName(), request.getCosPath(), this.cred);
+        String sign =
+                Sign.getOneEffectiveSign(request.getBucketName(), request.getCosPath(), this.cred);
 
         HttpRequest httpRequest = new HttpRequest();
         httpRequest.setUrl(url);
@@ -319,7 +319,8 @@ public class FileOp extends BaseOp {
         httpRequest.addHeader(RequestHeaderKey.USER_AGENT, this.config.getUserAgent());
         httpRequest.addParam(RequestBodyKey.OP, RequestBodyValue.OP.MOVE);
         httpRequest.addParam(RequestBodyKey.DEST_FIELD, request.getDstCosPath());
-        httpRequest.addParam(RequestBodyKey.TO_OVER_WRITE, String.valueOf(request.getOverWrite().ordinal()));
+        httpRequest.addParam(RequestBodyKey.TO_OVER_WRITE,
+                String.valueOf(request.getOverWrite().ordinal()));
         httpRequest.setMethod(HttpMethod.POST);
         httpRequest.setContentType(HttpContentType.APPLICATION_JSON);
         return httpClient.sendHttpRequest(httpRequest);
@@ -328,115 +329,18 @@ public class FileOp extends BaseOp {
     // 断点续传
     private String uploadFileWithCheckPoint(UploadSliceFileContext context)
             throws AbstractCosException {
-        SliceCheckPoint scp = new SliceCheckPoint();
+        JSONObject initResult = sendSliceInit(context);
 
-        if (context.isEnableSavePoint()) {
-            try {
-                scp.load(context.getSavePointFile());
-            } catch (Exception e) {
-                CommonFileUtils.remove(context.getSavePointFile());
-            }
-
-            if (!scp.isValid(context.getLocalPath())) {
-                CommonFileUtils.remove(context.getSavePointFile());
-                prepare(context, scp);
-            }
+        int initResultCode = initResult.getInt(ResponseBodyKey.CODE);
+        // 4019文件未上传完成,这时候应该用断点续传
+        if (initResultCode != 0 && initResultCode != -4019) {
+            return initResult.toString();
         }
 
-        JSONObject uploadResult = upload(context, scp);
-
-        if (context.isEnableSavePoint() && uploadResult.getInt(ResponseBodyKey.CODE) == 0) {
-            CommonFileUtils.remove(context.getSavePointFile());
-        }
-        return uploadResult.toString();
-    }
-
-    // 初始化断点信息
-    private void prepare(UploadSliceFileContext context, SliceCheckPoint scp)
-            throws AbstractCosException {
-        try {
-            long fileSize = 0;
-            if (context.isUploadFromBuffer()) {
-                fileSize = context.getContentBuffer().length;
-            } else {
-                try {
-                    fileSize = CommonFileUtils.getFileLength(context.getLocalPath());
-                    scp.uploadFile = context.getLocalPath();
-                    scp.uploadFileStat = FileStat.getFileStat(scp.uploadFile);
-                } catch (Exception e) {
-                    throw new UnknownException(e.toString());
-                }
-            }
-            int sliceSize = context.getSliceSize();
-
-            scp.magic = SliceCheckPoint.DEFAULT_MAGIC;
-            scp.cosPath = context.getCosPath();
-            scp.sessionId = context.getSessionId();
-            scp.enableShaDigest = context.isEnableSavePoint();
-            scp.sliceParts = splitFile(fileSize, sliceSize);
-            scp.initFlag = false;
-        } catch (Exception e) {
-            throw new UnknownException(e.getMessage());
-        }
-
-    }
-
-    // 切分文件
-    private ArrayList<SlicePart> splitFile(long fileSize, int sliceSize) {
-        ArrayList<SlicePart> sliceParts = new ArrayList<>();
-
-        int sliceCount = new Long((fileSize + (sliceSize - 1)) / sliceSize).intValue();
-        for (int sliceIndex = 0; sliceIndex < sliceCount; ++sliceIndex) {
-            SlicePart part = new SlicePart();
-            long offset = (Long.valueOf(sliceIndex).longValue()) * sliceSize;
-            part.setOffset(offset);
-            if (sliceIndex != sliceCount - 1) {
-                part.setSliceSize(sliceSize);
-            } else {
-                part.setSliceSize(new Long(fileSize - offset).intValue());
-            }
-            part.setUploadCompleted(false);
-            sliceParts.add(part);
-        }
-        return sliceParts;
-    }
-
-    // 根据断点中保存的信息，恢复request中的一些参数.
-    private void recover(UploadSliceFileContext context, SliceCheckPoint scp)
-            throws AbstractCosException {
-        try {
-            long fileSize = CommonFileUtils.getFileLength(context.getLocalPath());
-            context.setFileSize(fileSize);
-            context.setSessionId(scp.sessionId);
-            context.setEntireFileSha(scp.shaDigest);
-            context.setEnableShaDigest(scp.enableShaDigest);
-            context.setSliceSize(scp.sliceSize);
-        } catch (Exception e) {
-            throw new UnknownException(e.getMessage());
-        }
-    }
-
-    /**
-     * 文件上传逻辑，包括发送init分片，数据分片，finish分片
-     *
-     * @param context
-     * @param scp
-     * @return
-     * @throws Exception
-     */
-    private JSONObject upload(UploadSliceFileContext context, SliceCheckPoint scp)
-            throws AbstractCosException {
-        // 如果init未成功过，则发送init分片
-        if (!scp.initFlag) {
-
-            JSONObject initResult = sendSliceInit(context);
-            if (initResult.getInt(ResponseBodyKey.CODE) != 0) {
-                return initResult;
-            }
-
+        if (initResultCode == 0) {
             JSONObject data = initResult.getJSONObject(ResponseBodyKey.DATA);
             if (data.has(ResponseBodyKey.Data.ACCESS_URL)) {
-                return initResult;
+                return initResult.toString();
             }
             if (data.has(ResponseBodyKey.Data.SERIAL_UPLOAD)
                     && data.getInt(ResponseBodyKey.Data.SERIAL_UPLOAD) == 1) {
@@ -451,23 +355,34 @@ public class FileOp extends BaseOp {
             if (data.getInt(ResponseBodyKey.Data.SLICE_SIZE) != context.getSliceSize()) {
                 context.setSliceSize(data.getInt(ResponseBodyKey.Data.SLICE_SIZE));
             }
-            prepare(context, scp);
-            scp.updateAfterInit(context);
-
         } else {
-            // 否则根据断点信息，恢复上传请求中的一些信息, 如已经计算过的全文sha
-            recover(context, scp);
-        }
+            ListPartsRequest listPartsRequest =
+                    new ListPartsRequest(context.getBucketName(), context.getCosPath());
+            String listPartsResult = sliceListParts(listPartsRequest);
+            JSONObject listPartsJson = new JSONObject(listPartsResult);
+            if (listPartsJson.getInt(ResponseBodyKey.CODE) != 0) {
+                return listPartsJson.toString();
+            }
 
+            JSONObject data = listPartsJson.getJSONObject(ResponseBodyKey.DATA);
+            if (data.has(ResponseBodyKey.Data.LISTPARTS)) {
+                // TODO(chengwu) 目前server端返回有问题 当listpart为空的时候 返回的是null
+                JSONArray listPartsJsonArry = data.getJSONArray(ResponseBodyKey.Data.LISTPARTS);
+                context.setUploadCompleteParts(listPartsJsonArry);
+            }
+            context.setSessionId(data.getString(ResponseBodyKey.Data.SESSION));
+        }
+        
+        context.prepareUploadPartsInfo();
         // 并行发送数据分片
-        JSONObject sendParallelRet = sendSliceDataParallel(context, scp);
+        JSONObject sendParallelRet = sendSliceDataParallel(context);
         if (sendParallelRet.getInt(ResponseBodyKey.CODE) != 0) {
-            return sendParallelRet;
+            return sendParallelRet.toString();
         }
 
         // 发送finish分片
         JSONObject finishRet = sendSliceFinish(context);
-        return finishRet;
+        return finishRet.toString();
     }
 
     /**
@@ -479,18 +394,7 @@ public class FileOp extends BaseOp {
      */
     private JSONObject sendSliceInit(UploadSliceFileContext context) throws AbstractCosException {
         String localPath = context.getLocalPath();
-        long fileSize = 0;
-        try {
-            if (context.isUploadFromBuffer()) {
-                fileSize = context.getContentBuffer().length;
-            } else {
-                fileSize = CommonFileUtils.getFileLength(localPath);
-            }
-            context.setFileSize(fileSize);
-        } catch (Exception e) {
-            throw new UnknownException(e.toString());
-        }
-
+        long fileSize = context.getFileSize();
         int sliceSize = context.getSliceSize();
 
         StringBuilder entireDigestSb = new StringBuilder();
@@ -547,7 +451,7 @@ public class FileOp extends BaseOp {
      * @return 服务器端返回的操作结果，code为0表示成功
      * @throws Exception
      */
-    private JSONObject sendSliceDataParallel(UploadSliceFileContext context, SliceCheckPoint scp)
+    private JSONObject sendSliceDataParallel(UploadSliceFileContext context)
             throws AbstractCosException {
         List<Future<JSONObject>> allSliceTasks = new ArrayList<>();
         // 默认串行执行,只用一个线程，如果server端支持并行上传，则用多个线程执行
@@ -559,10 +463,10 @@ public class FileOp extends BaseOp {
 
         String url = context.getUrl();
         long signExpired = this.config.getSignExpired();
-        for (int sliceIndex = 0; sliceIndex < scp.sliceParts.size(); ++sliceIndex) {
-            if (!scp.sliceParts.get(sliceIndex).isUploadCompleted()) {
-                SliceFileDataTask dataTask = new SliceFileDataTask(sliceIndex, sliceIndex, scp,
-                        context, httpClient, cred, url, signExpired);
+        for (int sliceIndex = 0; sliceIndex < context.sliceParts.size(); ++sliceIndex) {
+            if (!context.sliceParts.get(sliceIndex).isUploadCompleted()) {
+                SliceFileDataTask dataTask = new SliceFileDataTask(sliceIndex, sliceIndex, context,
+                        httpClient, cred, url, signExpired);
                 allSliceTasks.add(service.submit(dataTask));
             }
         }
@@ -630,6 +534,25 @@ public class FileOp extends BaseOp {
         return resultJson;
     }
 
+    public String sliceListParts(ListPartsRequest request) throws AbstractCosException {
+        request.check_param();
+
+        String url = buildUrl(request);
+        long signExpired = System.currentTimeMillis() / 1000 + this.config.getSignExpired();
+        String sign = Sign.getPeriodEffectiveSign(request.getBucketName(), request.getCosPath(),
+                this.cred, signExpired);
+
+        HttpRequest httpRequest = new HttpRequest();
+        httpRequest.setUrl(url);
+        httpRequest.addHeader(RequestHeaderKey.Authorization, sign);
+        httpRequest.addHeader(RequestHeaderKey.Content_TYPE, RequestHeaderValue.ContentType.JSON);
+        httpRequest.addHeader(RequestHeaderKey.USER_AGENT, this.config.getUserAgent());
+        httpRequest.addParam(RequestBodyKey.OP, RequestBodyValue.OP.UPLOAD_SLICE_LIST);
+        httpRequest.setMethod(HttpMethod.POST);
+        httpRequest.setContentType(HttpContentType.APPLICATION_JSON);
+        return httpClient.sendHttpRequest(httpRequest);
+    }
+
     public String getFileLocal(GetFileLocalRequest request) throws AbstractCosException {
         InputStream in = getFileInputStream(request);
         BufferedInputStream bis = new BufferedInputStream(in);
@@ -664,8 +587,8 @@ public class FileOp extends BaseOp {
             throws AbstractCosException {
         String url = buildGetFileUrl(request);
         long signExpired = System.currentTimeMillis() / 1000 + this.config.getSignExpired();
-        String sign = Sign.getDownLoadSign(request.getBucketName(), request.getCosPath(),
-                this.cred, signExpired);
+        String sign = Sign.getDownLoadSign(request.getBucketName(), request.getCosPath(), this.cred,
+                signExpired);
 
         StringBuilder rangeBuilder = new StringBuilder();
         if (request.getRangeStart() != 0 || request.getRangeEnd() != Long.MAX_VALUE) {

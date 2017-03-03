@@ -20,9 +20,6 @@ public class UploadFileRequest extends AbstractBaseRequest {
 
     private InsertOnly insertOnly = InsertOnly.NO_OVER_WRITE;
 
-    // 开启断点请求，默认开启
-    protected boolean enableSavePoint = true;
-
     // 开启sha摘要
     protected boolean enableShaDigest = false;
 
@@ -116,14 +113,6 @@ public class UploadFileRequest extends AbstractBaseRequest {
         this.enableShaDigest = enableShaDigest;
     }
 
-    public boolean isEnableSavePoint() {
-        return enableSavePoint;
-    }
-
-    public void setEnableSavePoint(boolean enableSavePoint) {
-        this.enableSavePoint = enableSavePoint;
-    }
-
     @Override
     public String toString() {
         StringBuilder sb = new StringBuilder();
@@ -131,6 +120,7 @@ public class UploadFileRequest extends AbstractBaseRequest {
         sb.append(", local_path:").append(getMemberStringValue(this.localPath));
         sb.append(", bizAttr:").append(getMemberStringValue(this.bizAttr));
         sb.append(", uploadFromBuffer:").append(this.uploadFromBuffer);
+        sb.append(", insertonly:");
         if (this.insertOnly == null) {
             sb.append("null");
         } else {
