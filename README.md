@@ -10,7 +10,7 @@ sdk说明请参照[cos java sdk文档](https://www.qcloud.com/doc/product/436/62
 ```xml
 <groupId>com.qcloud</groupId>
 <artifactId>cos_api</artifactId>
-<version>4.2</version>
+<version>4.3</version>
 ```
 
 ### 直接下载源码集成
