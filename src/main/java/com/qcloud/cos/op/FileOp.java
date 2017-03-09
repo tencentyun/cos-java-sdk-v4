@@ -366,7 +366,6 @@ public class FileOp extends BaseOp {
 
             JSONObject data = listPartsJson.getJSONObject(ResponseBodyKey.DATA);
             if (data.has(ResponseBodyKey.Data.LISTPARTS)) {
-                // TODO(chengwu) 目前server端返回有问题 当listpart为空的时候 返回的是null
                 JSONArray listPartsJsonArry = data.getJSONArray(ResponseBodyKey.Data.LISTPARTS);
                 context.setUploadCompleteParts(listPartsJsonArry);
             }
