@@ -21,3 +21,10 @@ sdk说明请参照[cos java sdk文档](https://www.qcloud.com/doc/product/436/62
 修改Demo.java内的appId, secretId, secretKey等信息为您的配置(可在控制台上查阅相关信息), 然后运行Demo.java。
 
 
+### 常见问题:
+
+1 引入SDK运行后，出现 java.lang.NoSuchMethodError的异常。
+
+   原因: 一般是发生了JAR包冲突，比如用户的工程中的http的JAR包版本没有A方法，但是SDK依赖的JAR包有A方法。此时运行时加载顺序的问题，加载了用户工程中的http库，运行时便会抛出NoSuchMethodError的异常。
+
+   解决方法:  将已包含的工程中引起NoSuchMethodError的包的版本和SDK中pom.xml里的对应库的版本改成一致。
