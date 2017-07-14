@@ -49,7 +49,7 @@ public class Demo {
         ///////////////////////////////////////////////////////////////
         // 文件操作 //
         ///////////////////////////////////////////////////////////////
-        // 1. 上传文件(默认不覆盖)
+        // 1. 上传文件(将本地文件上传到COS)
         // 将本地的local_file_1.txt上传到bucket下的根分区下,并命名为sample_file.txt
         // 默认不覆盖, 如果cos上已有文件, 则返回错误
         String cosFilePath = "/sample_file.txt";
@@ -69,13 +69,15 @@ public class Demo {
         String getFileResult = cosClient.getFileLocal(getFileLocalRequest);
         System.out.println("getFileResult:" + getFileResult);
 
-        // 3. 上传文件(覆盖)
-        // 将本地的local_file_2.txt上传到bucket下的根分区下,并命名为sample_file.txt
+        // 3. 上传文件(将内存数据上传到COS)
+        // 示例程序的内存数据来自于本地文件，将本地文件整体读入内存，如果本地文件过大，可能导致OOM
+        // 因此如果数据在本地，建议直接用方法1
         String localFilePath2 = "src/test/resources/local_file_2.txt";
         byte[] contentBuffer = CommonFileUtils.getFileContent(localFilePath2)
                 .getBytes(Charset.forName(("ISO-8859-1")));
         UploadFileRequest overWriteFileRequest =
                 new UploadFileRequest(bucketName, cosFilePath, contentBuffer);
+        // 如果COS上已有文件, 则进行覆盖(默认不覆盖)
         overWriteFileRequest.setInsertOnly(InsertOnly.OVER_WRITE);
         String overWriteFileRet = cosClient.uploadFile(overWriteFileRequest);
         System.out.println("overwrite file ret:" + overWriteFileRet);
