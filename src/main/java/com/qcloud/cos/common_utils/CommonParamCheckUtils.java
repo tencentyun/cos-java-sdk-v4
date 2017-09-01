@@ -92,7 +92,7 @@ public class CommonParamCheckUtils {
 	}
 
 	/**
-	 * 判断用户指定的cos文件路径是否合法有效, 即不以/结尾, 同时不包含非法字符
+	 * 判断用户指定的cos文件路径是否合法有效, 即不以/结尾
 	 * 
 	 * @param cosFilePath
 	 *            cos文件路径
@@ -102,7 +102,6 @@ public class CommonParamCheckUtils {
 		if (cosFilePath == null || !cosFilePath.startsWith("/") || cosFilePath.endsWith("/")) {
 			throw new ParamException(cosFilePath + " is not cos file path! Tips: make sure not ends with /");
 		}
-		AssertNotContainIllegalLetter(cosFilePath);
 	}
 
 	/**

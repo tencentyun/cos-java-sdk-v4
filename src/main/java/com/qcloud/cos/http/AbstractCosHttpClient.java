@@ -28,6 +28,7 @@ public abstract class AbstractCosHttpClient {
         this.connectionManager = new PoolingHttpClientConnectionManager();
         this.connectionManager.setMaxTotal(config.getMaxConnectionsCount());
         this.connectionManager.setDefaultMaxPerRoute(config.getMaxConnectionsCount());
+        this.connectionManager.setValidateAfterInactivity(1);
         HttpClientBuilder httpClientBuilder =
                 HttpClients.custom().setConnectionManager(connectionManager);
         if (config.getHttpProxyIp() != null && config.getHttpProxyPort() != 0) {

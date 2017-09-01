@@ -87,12 +87,14 @@ public class DefaultCosHttpClient extends AbstractCosHttpClient {
                 int http_statuscode = httpResponse.getStatusLine().getStatusCode();
 
                 if (http_statuscode >= 500 && http_statuscode <= 599) {
-                    String errMsg = String.format("http status code is %d, response body: %s", http_statuscode, getResponseString(httpResponse));
+                    String errMsg = String.format("http status code is %d, response body: %s",
+                            http_statuscode, getResponseString(httpResponse));
                     throw new IOException(errMsg);
                 }
 
                 responseStr = getResponseString(httpResponse);
                 new JSONObject(responseStr);
+                httpGet.releaseConnection();
                 return responseStr;
             } catch (ParseException | IOException e) {
                 httpGet.abort();
@@ -102,12 +104,11 @@ public class DefaultCosHttpClient extends AbstractCosHttpClient {
                     throw new ServerException(errMsg);
                 }
             } catch (JSONException e) {
+                httpGet.abort();
                 String errMsg = String.format(
                         "server response is not json, httpRequest: %s, httpResponse: %s, responseStr: %s",
                         httpRequest.toString(), httpResponse.toString(), responseStr);
                 throw new ServerException(errMsg);
-            } finally {
-                httpGet.releaseConnection();
             }
         }
         return responseStr;
@@ -142,11 +143,13 @@ public class DefaultCosHttpClient extends AbstractCosHttpClient {
                 httpResponse = httpClient.execute(httpPost);
                 int http_statuscode = httpResponse.getStatusLine().getStatusCode();
                 if (http_statuscode >= 500 && http_statuscode <= 599) {
-                    String errMsg = String.format("http status code is %d, response body: %s", http_statuscode, getResponseString(httpResponse));
+                    String errMsg = String.format("http status code is %d, response body: %s",
+                            http_statuscode, getResponseString(httpResponse));
                     throw new IOException(errMsg);
                 }
                 responseStr = getResponseString(httpResponse);
                 new JSONObject(responseStr);
+                httpPost.releaseConnection();
                 return responseStr;
             } catch (ParseException | IOException e) {
                 httpPost.abort();
@@ -156,12 +159,11 @@ public class DefaultCosHttpClient extends AbstractCosHttpClient {
                     throw new ServerException(errMsg);
                 }
             } catch (JSONException e) {
+                httpPost.abort();
                 String errMsg = String.format(
                         "server response is not json, httpRequest: %s, httpResponse: %s, responseStr: %s",
                         httpRequest.toString(), httpResponse.toString(), responseStr);
                 throw new ServerException(errMsg);
-            } finally {
-                httpPost.releaseConnection();
             }
         }
         return responseStr;
@@ -192,7 +194,8 @@ public class DefaultCosHttpClient extends AbstractCosHttpClient {
                 HttpResponse httpResponse = httpClient.execute(httpGet);
                 int http_statuscode = httpResponse.getStatusLine().getStatusCode();
                 if (http_statuscode >= 500 && http_statuscode <= 599) {
-                    String errMsg = String.format("http status code is %d, response body: %s", http_statuscode, getResponseString(httpResponse));
+                    String errMsg = String.format("http status code is %d, response body: %s",
+                            http_statuscode, getResponseString(httpResponse));
                     throw new IOException(errMsg);
                 }
                 if (http_statuscode != 200 && http_statuscode != 206) {
@@ -211,7 +214,6 @@ public class DefaultCosHttpClient extends AbstractCosHttpClient {
             } catch (ParseException | IOException e) {
                 ++retry;
                 httpGet.abort();
-                httpGet.releaseConnection();
                 if (retry == maxRetryCount) {
                     String errMsg = getExceptionMsg(httpRequest, e.toString());
                     throw new ServerException(errMsg);
@@ -228,7 +230,7 @@ public class DefaultCosHttpClient extends AbstractCosHttpClient {
         if (httpEntity != null) {
             httpResponseStr = EntityUtils.toString(httpEntity, "UTF-8");
         }
-        
+
         if (httpResponseStr == null) {
             return "";
         } else {

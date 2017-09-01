@@ -1,6 +1,6 @@
 package com.qcloud.cos.sign;
 
-import java.util.Random;
+import java.util.concurrent.ThreadLocalRandom;
 
 import com.qcloud.cos.common_utils.CommonCodecUtils;
 import com.qcloud.cos.common_utils.CommonPathUtils;
@@ -34,7 +34,7 @@ public class Sign {
 		String secretId = cred.getSecretId();
 		String secretKey = cred.getSecretKey();
 		long now = System.currentTimeMillis() / 1000;
-		int rdm = Math.abs(new Random().nextInt());
+		int rdm = Math.abs(ThreadLocalRandom.current().nextInt());
 		String fileId = null;
 		if (uploadFlag) {
 			fileId = String.format("/%d/%s%s", appId, bucketName, cosPath);
