@@ -22,7 +22,7 @@ public class ClientConfig {
     // 默认的SOCKET读取超时时间, 默认毫秒
     private static final int DEFAULT_SOCKET_TIMEOUT = 30 * 1000;
     // 默认的维护最大HTTP连接数
-    private static final int DEFAULT_MAX_CONNECTIONS_COUNT = 100;
+    private static final int DEFAULT_MAX_CONNECTIONS_COUNT = 1024;
     // 默认的user_agent标识
     private static final String DEFAULT_USER_AGENT = "cos-java-sdk-v4.2";
 
