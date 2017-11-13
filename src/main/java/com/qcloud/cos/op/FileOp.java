@@ -428,6 +428,7 @@ public class FileOp extends BaseOp {
         httpRequest.addParam(RequestBodyKey.OP, RequestBodyValue.OP.UPLOAD_SLICE_INIT);
         httpRequest.addParam(RequestBodyKey.INSERT_ONLY,
                 String.valueOf(context.getInsertOnly().ordinal()));
+        httpRequest.addParam(RequestBodyKey.BIZ_ATTR, context.getBizAttr());
         if (context.isEnableShaDigest()) {
             httpRequest.addParam(RequestBodyKey.SHA, entireDigestSb.toString());
             httpRequest.addParam(RequestBodyKey.UPLOAD_PARTS, slicePartDigest);
