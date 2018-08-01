@@ -96,7 +96,14 @@ public class DefaultCosHttpClient extends AbstractCosHttpClient {
                 new JSONObject(responseStr);
                 httpGet.releaseConnection();
                 return responseStr;
-            } catch (ParseException | IOException e) {
+            } catch (ParseException e) {
+                httpGet.abort();
+                ++retry;
+                if (retry == maxRetryCount) {
+                    String errMsg = getExceptionMsg(httpRequest, e.toString());
+                    throw new ServerException(errMsg);
+                }
+            } catch (IOException e) {
                 httpGet.abort();
                 ++retry;
                 if (retry == maxRetryCount) {
@@ -151,7 +158,14 @@ public class DefaultCosHttpClient extends AbstractCosHttpClient {
                 new JSONObject(responseStr);
                 httpPost.releaseConnection();
                 return responseStr;
-            } catch (ParseException | IOException e) {
+            } catch (ParseException e) {
+                httpPost.abort();
+                ++retry;
+                if (retry == maxRetryCount) {
+                    String errMsg = getExceptionMsg(httpRequest, e.toString());
+                    throw new ServerException(errMsg);
+                }
+            }  catch (IOException e) {
                 httpPost.abort();
                 ++retry;
                 if (retry == maxRetryCount) {
@@ -211,7 +225,14 @@ public class DefaultCosHttpClient extends AbstractCosHttpClient {
                 COSObjectInputStream cosObjectInputStream =
                         new COSObjectInputStream(entity.getContent(), httpGet);
                 return cosObjectInputStream;
-            } catch (ParseException | IOException e) {
+            } catch (ParseException e) {
+                ++retry;
+                httpGet.abort();
+                if (retry == maxRetryCount) {
+                    String errMsg = getExceptionMsg(httpRequest, e.toString());
+                    throw new ServerException(errMsg);
+                }
+            } catch (IOException e) {
                 ++retry;
                 httpGet.abort();
                 if (retry == maxRetryCount) {

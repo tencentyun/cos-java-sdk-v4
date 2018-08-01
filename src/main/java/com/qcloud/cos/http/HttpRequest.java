@@ -8,8 +8,8 @@ public class HttpRequest {
 	private String url = "";
 	private HttpMethod method = HttpMethod.POST;
 	private HttpContentType contentType = HttpContentType.MULTIPART_FORM_DATA;
-	private Map<String, String> headers = new LinkedHashMap<>();
-	private Map<String, String> params = new LinkedHashMap<>();
+	private Map<String, String> headers = new LinkedHashMap<String, String>();
+	private Map<String, String> params = new LinkedHashMap<String, String>();
 
 	public HttpRequest() {
 		super();

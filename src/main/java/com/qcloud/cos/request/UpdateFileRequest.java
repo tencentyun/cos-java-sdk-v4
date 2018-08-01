@@ -31,9 +31,9 @@ public class UpdateFileRequest extends AbstractBaseRequest {
     // HTTP Content-Encoding属性
     private String contentEncoding = "";
     // 自定义http头
-    private Map<String, String> customHeaders = new HashMap<>();
+    private Map<String, String> customHeaders = new HashMap<String, String>();
     // 自定义http头, key为x-cos-meta-开头, value为字符串
-    private Map<String, String> xCosMetaHeaders = new HashMap<>();
+    private Map<String, String> xCosMetaHeaders = new HashMap<String, String>();
 
     public UpdateFileRequest(String bucketName, String cosPath) {
         super(bucketName, cosPath);

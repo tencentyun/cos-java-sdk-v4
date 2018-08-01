@@ -71,7 +71,7 @@ public class UploadSliceFileContext {
         this.taskNum = request.getTaskNum();
         this.enableShaDigest = request.isEnableShaDigest();
         this.sliceParts = new ArrayList<SlicePart>();
-        this.uploadCompletePartsSet = new HashSet<>();
+        this.uploadCompletePartsSet = new HashSet<Long>();
         caculateFileSize();
     }
 

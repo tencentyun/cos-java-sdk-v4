@@ -453,7 +453,7 @@ public class FileOp extends BaseOp {
      */
     private JSONObject sendSliceDataParallel(UploadSliceFileContext context)
             throws AbstractCosException {
-        List<Future<JSONObject>> allSliceTasks = new ArrayList<>();
+        List<Future<JSONObject>> allSliceTasks = new ArrayList<Future<JSONObject>>();
         // 默认串行执行,只用一个线程，如果server端支持并行上传，则用多个线程执行
         int threadNum = 1;
         if (!context.isSerialUpload()) {
@@ -606,6 +606,7 @@ public class FileOp extends BaseOp {
             httpRequest.addHeader(RequestHeaderKey.REFERER, request.getReferer());
         }
         httpRequest.addParam(RequestHeaderKey.SIGN, sign);
+        httpRequest.setMethod(HttpMethod.GET);
         return httpClient.getFileInputStream(httpRequest);
     }
 }
