@@ -16,7 +16,6 @@ import com.qcloud.cos.http.HttpRequest;
 import com.qcloud.cos.http.RequestBodyKey;
 import com.qcloud.cos.http.RequestBodyValue;
 import com.qcloud.cos.http.RequestHeaderKey;
-import com.qcloud.cos.http.ResponseBodyKey;
 import com.qcloud.cos.sign.Credentials;
 import com.qcloud.cos.sign.Sign;
 

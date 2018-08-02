@@ -1,6 +1,6 @@
 package com.qcloud.cos.sign;
 
-import java.util.concurrent.ThreadLocalRandom;
+import java.util.Random;
 
 import com.qcloud.cos.common_utils.CommonCodecUtils;
 import com.qcloud.cos.common_utils.CommonPathUtils;
@@ -11,6 +11,7 @@ import com.qcloud.cos.exception.UnknownException;
  * @author chengwu 封装签名类，包括单次，多次以及下载签名
  */
 public class Sign {
+    private static final Random randomGenerator = new Random();
 
 	/**
 	 * 返回用户访问资源的签名
@@ -34,7 +35,7 @@ public class Sign {
 		String secretId = cred.getSecretId();
 		String secretKey = cred.getSecretKey();
 		long now = System.currentTimeMillis() / 1000;
-		int rdm = Math.abs(ThreadLocalRandom.current().nextInt());
+		int rdm = Math.abs(randomGenerator.nextInt());
 		String fileId = null;
 		if (uploadFlag) {
 			fileId = String.format("/%d/%s%s", appId, bucketName, cosPath);
