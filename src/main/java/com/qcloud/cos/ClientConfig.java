@@ -24,7 +24,7 @@ public class ClientConfig {
     // 默认的维护最大HTTP连接数
     private static final int DEFAULT_MAX_CONNECTIONS_COUNT = 1024;
     // 默认的user_agent标识
-    private static final String DEFAULT_USER_AGENT = "cos-java-sdk-v4.2";
+    private static final String DEFAULT_USER_AGENT = "cos-java-sdk-v4.7";
 
     private String uploadCosEndPointPrefix = UPLOAD_COS_ENDPOINT_PREFIX;
     private String uploadCosEndPointDomain = UPLOAD_COS_ENDPOINT_DOMAIN;
