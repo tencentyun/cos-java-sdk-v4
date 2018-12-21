@@ -4,6 +4,9 @@ java sdk for [腾讯云对象存储服务](https://www.qcloud.com/product/cos.ht
 
 sdk说明请参照[cos java sdk文档](https://www.qcloud.com/doc/product/436/6273)
 
+## 已弃用 - 请升级到 cos-java-sdk-v5
+SDK 依赖的 JSON API 已弃用，请直接使用基于 XML API 的 [cos-java-sdk-v5](https://github.com/tencentyun/cos-java-sdk-v5)，或者参照 [指引](https://cloud.tencent.com/document/product/436/31355) 升级到新版SDK。
+
 
 ## maven坐标
 
