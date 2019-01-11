@@ -77,8 +77,6 @@ public class Demo {
                 .getBytes(Charset.forName(("ISO-8859-1")));
         UploadFileRequest overWriteFileRequest =
                 new UploadFileRequest(bucketName, cosFilePath, contentBuffer);
-        // 如果COS上已有文件, 则进行覆盖(默认不覆盖)
-        overWriteFileRequest.setInsertOnly(InsertOnly.OVER_WRITE);
         String overWriteFileRet = cosClient.uploadFile(overWriteFileRequest);
         System.out.println("overwrite file ret:" + overWriteFileRet);
 
